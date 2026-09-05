@@ -187,6 +187,13 @@
   .proj:hover{transform:translateY(-4px);border-color:rgba(79,195,247,.4)}
   .proj:hover::after{opacity:1}
   .proj > *{position:relative;z-index:1}
+  .proj .thumb{display:block;width:calc(100% + 52px);height:180px;object-fit:cover;
+    object-position:center;margin:-26px -26px 20px;border-bottom:1px solid var(--line);
+    background:var(--chip);transition:transform .45s ease}
+  .proj:hover .thumb{transform:scale(1.03)}
+  .proj.feature .thumb{height:220px;object-position:center 40%}
+  @media(max-width:600px){.proj .thumb,.proj.feature .thumb{height:150px}}
+  @media(prefers-reduced-motion:reduce){.proj:hover .thumb{transform:none}}
   .proj.feature{grid-column:1/-1;border-color:rgba(34,211,167,.3)}
   .proj.feature::after{background:radial-gradient(600px circle at 100% 0%,rgba(34,211,167,.1),transparent 70%)}
   .proj-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
@@ -573,6 +580,7 @@
   <div class="projects">
 
     <div class="proj feature">
+      <img class="thumb" src="thumb-lakehouse.png" alt="Medallion lakehouse architecture diagram" loading="lazy" width="800" height="400" />
       <div class="proj-top">
         <h3>Retail Sales Lakehouse &mdash; Batch Medallion Pipeline</h3>
         <span class="ptype oss">Open source</span>
@@ -595,6 +603,7 @@
     </div>
 
     <div class="proj">
+      <img class="thumb" src="thumb-code.png" alt="Code analysis automation illustration" loading="lazy" width="800" height="400" />
       <div class="proj-top">
         <h3>Code Analyzer Automation Tool</h3>
         <span class="ptype">Enterprise</span>
@@ -610,6 +619,7 @@
     </div>
 
     <div class="proj">
+      <img class="thumb" src="thumb-rag.png" alt="Retrieval augmented generation graph illustration" loading="lazy" width="800" height="400" />
       <div class="proj-top">
         <h3>RAG AI Agents &mdash; Copilot Studio</h3>
         <span class="ptype">Enterprise</span>
@@ -625,6 +635,7 @@
     </div>
 
     <div class="proj">
+      <img class="thumb" src="thumb-fabric.png" alt="Pipeline monitoring illustration" loading="lazy" width="800" height="400" />
       <div class="proj-top">
         <h3>Fabric Migration &amp; Pipeline Monitoring</h3>
         <span class="ptype">Enterprise</span>
@@ -640,6 +651,7 @@
     </div>
 
     <div class="proj">
+      <img class="thumb" src="thumb-ml.png" alt="Gradient boosted decision trees illustration" loading="lazy" width="800" height="400" />
       <div class="proj-top">
         <h3>ML Prediction Model &mdash; XGBoost</h3>
         <span class="ptype">Enterprise</span>
