@@ -250,9 +250,13 @@
   .field.invalid input,.field.invalid textarea{border-color:#ff7b8a}
   .field.invalid .err{display:block}
   .form-note{font-size:.78rem;color:var(--mut)}
-  .status{display:none;padding:13px 16px;border-radius:10px;font-size:.88rem;
-    background:rgba(34,211,167,.09);border:1px solid rgba(34,211,167,.3);color:var(--acc3)}
+  .status{display:none;padding:13px 16px;border-radius:10px;font-size:.88rem;margin-top:14px;
+    background:var(--chip);border:1px solid var(--line);color:var(--txt2)}
   .status.show{display:block}
+  .status.ok{background:rgba(34,211,167,.09);border-color:rgba(34,211,167,.3);color:var(--acc3)}
+  .status.err{background:rgba(255,77,109,.09);border-color:rgba(255,77,109,.32);color:#ff8098}
+  .status a{color:inherit;text-decoration:underline}
+  form button[type="submit"]:disabled{opacity:.6;cursor:not-allowed}
   .reach{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:24px}
   .reach h4{font-size:.95rem;margin-bottom:8px}
   .reach a,.reach .item{display:flex;align-items:center;gap:12px;color:var(--txt2);text-decoration:none;
@@ -774,8 +778,9 @@
         <textarea id="message" name="message" rows="6" placeholder="Tell me a bit about the role, project, or question..." required></textarea>
         <span class="err">Please write a message (at least 10 characters).</span>
       </div>
+      <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />
       <button type="submit" class="btn btn-p">Send message &rarr;</button>
-      <p class="form-note">Your message opens in your email client, pre-filled and addressed to me.</p>
+      <p class="form-note">Sent straight to my inbox &mdash; no email client needed. I usually reply within a day.</p>
       <div class="status" id="formStatus"></div>
     </form>
 
@@ -863,6 +868,9 @@
   var form = document.getElementById('contactForm');
   var status = document.getElementById('formStatus');
   var EMAIL = 'ashishshandil27@gmail.com';
+  /* Form backend. FormSubmit requires no account - the first submission
+     triggers a one-time confirmation email to activate the endpoint. */
+  var ENDPOINT = 'https://formsubmit.co/ajax/' + EMAIL;
   var checks = {
     name: function(v){ return v.trim().length > 1; },
     email: function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()); },
@@ -874,7 +882,8 @@
     el.closest('.field').classList.toggle('invalid', !ok);
     return ok;
   }
-  form.querySelectorAll('input,textarea').forEach(function(el){
+  var FIELD_SEL = 'input:not([name="_honey"]),textarea';
+  form.querySelectorAll(FIELD_SEL).forEach(function(el){
     el.addEventListener('blur', function(){ validate(el); });
     el.addEventListener('input', function(){
       if (el.closest('.field').classList.contains('invalid')) validate(el);
@@ -882,22 +891,57 @@
   });
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    var fields = Array.prototype.slice.call(form.querySelectorAll('input,textarea'));
+    var fields = Array.prototype.slice.call(form.querySelectorAll(FIELD_SEL));
     var valid = fields.map(validate).every(Boolean);
     if (!valid) {
       status.classList.remove('show');
+      status.className = 'status';
       form.querySelector('.field.invalid input,.field.invalid textarea').focus();
       return;
     }
+    if (form.querySelector('[name="_honey"]').value) return; // bot trap
+
     var d = {};
     new FormData(form).forEach(function(v,k){ d[k] = v; });
-    var body = d.message + '\n\n--\n' + d.name + '\n' + d.email;
-    window.location.href = 'mailto:' + EMAIL +
-      '?subject=' + encodeURIComponent(d.subject) +
-      '&body=' + encodeURIComponent(body);
-    status.textContent = 'Opening your email client with the message ready to send.';
-    status.classList.add('show');
-    form.reset();
+
+    var btn = form.querySelector('button[type="submit"]');
+    var label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    status.className = 'status show';
+    status.textContent = 'Sending your message...';
+
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: JSON.stringify({
+        name: d.name,
+        email: d.email,
+        _subject: 'Portfolio enquiry: ' + d.subject,
+        subject: d.subject,
+        message: d.message,
+        _template: 'table',
+        _captcha: 'false'
+      })
+    })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
+      if (!r.ok) throw new Error(j.message || 'Request failed');
+      return j;
+    }); })
+    .then(function(){
+      status.className = 'status show ok';
+      status.textContent = 'Thanks ' + d.name.split(' ')[0] + '! Your message has been sent. I usually reply within a day.';
+      form.reset();
+    })
+    .catch(function(){
+      status.className = 'status show err';
+      status.innerHTML = 'Could not send automatically. Please email me directly at ' +
+        '<a href="mailto:' + EMAIL + '?subject=' + encodeURIComponent(d.subject) + '">' + EMAIL + '</a>.';
+    })
+    .finally(function(){
+      btn.disabled = false;
+      btn.textContent = label;
+    });
   });
 </script>
 </body>
